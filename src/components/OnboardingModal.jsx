@@ -1,0 +1,102 @@
+import { useState, useCallback } from 'react';
+import { warmup } from '../api';
+
+function OnboardingModal({ onDismiss }) {
+  const [phase, setPhase] = useState('intro'); // 'intro' | 'warming' | 'error'
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleWarmup = useCallback(async () => {
+    setPhase('warming');
+    setErrorMsg('');
+
+    try {
+      console.log('Triggering backend warmup...');
+      const result = await warmup();
+
+      if (!result) {
+        throw new Error('No response from backend');
+      }
+
+      console.log('Backend warmed up successfully.');
+      onDismiss();
+    } catch (e) {
+      console.error('Warmup failed:', e);
+      setPhase('error');
+      setErrorMsg('Could not connect to the backend server. Please make sure the backend is running and try again.');
+    }
+  }, [onDismiss]);
+
+  return (
+    <div id="onboarding-overlay" className="modal-overlay">
+      <div className="modal-content">
+
+        {/* Phase 1: Intro / Guidelines */}
+        {phase === 'intro' && (
+          <>
+            <h2>Welcome to Vai AI Platform</h2>
+            <p>Your intelligent companion for all things IEEE. Please follow these guidelines for the best experience:</p>
+            <ul className="modal-list">
+              <li>
+                <strong>Select your mode:</strong> Use <em>Deep Dive</em> for technical research and <em>Student Branch</em> for activities.
+              </li>
+              <li>
+                <strong>Be precise:</strong> Detailed queries help the AI find exactly what you need.
+              </li>
+              <li>
+                <strong>Verify information:</strong> Check the provided IEEE sources in Deep Dive mode for technical accuracy.
+              </li>
+              <li>
+                <strong>Stay professional:</strong> Maintain a respectful tone in your interactions.
+              </li>
+            </ul>
+            <button id="onboarding-btn" className="modal-btn" onClick={handleWarmup}>
+              I Understand
+            </button>
+          </>
+        )}
+
+        {/* Phase 2: Warming up */}
+        {phase === 'warming' && (
+          <div className="warmup-state">
+            <div className="warmup-spinner-container">
+              <svg className="warmup-spinner" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <circle className="warmup-spinner-track" cx="25" cy="25" r="20" />
+                <circle className="warmup-spinner-arc" cx="25" cy="25" r="20" />
+              </svg>
+            </div>
+            <h2>Setting things up</h2>
+            <p className="warmup-text">We are creating the environment for you, please wait for a bit...</p>
+            <div className="warmup-progress-bar">
+              <div className="warmup-progress-fill"></div>
+            </div>
+          </div>
+        )}
+
+        {/* Phase 3: Error */}
+        {phase === 'error' && (
+          <div className="warmup-error-state">
+            <div className="error-icon">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="#ef4444" strokeWidth="2" />
+                <path d="M12 8v4" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="12" cy="16" r="1" fill="#ef4444" />
+              </svg>
+            </div>
+            <h2 className="error-heading">Connection Failed</h2>
+            <p className="error-text">{errorMsg}</p>
+            <button className="modal-btn retry-btn" onClick={handleWarmup}>
+              <svg className="retry-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 4v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.51 15a9 9 0 105.64-8.36L1 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Retry Connection
+            </button>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+export default OnboardingModal;
