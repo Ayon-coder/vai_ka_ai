@@ -23,6 +23,7 @@ body {
     line-height: 1.6;
     overflow: hidden;
     height: 100vh;
+    height: 100dvh;
 }
 
 /* Background Effects */
@@ -62,6 +63,7 @@ body {
     max-width: 1000px;
     margin: 0 auto;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     padding: 20px;
@@ -499,9 +501,70 @@ textarea::placeholder {
 
 /* Responsive */
 @media (max-width: 640px) {
-    .app-container { padding: 10px; }
-    .welcome-container h2 { font-size: 2rem; }
-    .message { max-width: 95%; }
+    .app-container { 
+        padding: 10px 5px; 
+    }
+    .header {
+        flex-wrap: wrap;
+        padding: 10px 5px;
+        gap: 10px;
+    }
+    .logo h1 {
+        font-size: 1.2rem;
+    }
+    .header-controls {
+        gap: 8px;
+    }
+    .mode-dropdown {
+        font-size: 0.75rem;
+        padding: 6px 8px;
+    }
+    .online-indicator span:last-child {
+        display: none; /* hide "Active" label to save space */
+    }
+    .online-indicator {
+        padding: 6px;
+    }
+    .welcome-container {
+        padding: 30px 10px;
+        gap: 15px;
+    }
+    .welcome-container h2 { 
+        font-size: 1.8rem; 
+    }
+    .suggestion-chip {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+    .suggestions {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+    }
+    .message { 
+        max-width: 95%; 
+    }
+    .message-bubble {
+        padding: 12px 14px;
+        font-size: 0.95rem;
+    }
+    .input-area {
+        padding: 10px 5px 15px 5px;
+    }
+    .input-box {
+        padding: 6px 10px;
+        gap: 8px;
+        border-radius: 18px;
+    }
+    textarea {
+        font-size: 0.95rem;
+        padding: 8px 4px;
+    }
+    #send-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+    }
 }
 
 /* Onboarding Modal */
@@ -647,7 +710,17 @@ textarea::placeholder {
 }
 
 @media (max-width: 640px) {
-    .modal-content { padding: 30px 20px; }
+    .modal-content { 
+        padding: 25px 15px; 
+        border-radius: 20px;
+    }
+    .modal-content h2 {
+        font-size: 1.5rem;
+    }
+    .modal-btn {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+    }
     .guide-tooltip { 
         right: 10px; 
         left: 10px; 
