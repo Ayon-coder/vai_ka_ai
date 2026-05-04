@@ -31,11 +31,6 @@ function LoadingIndicator() {
         <span className="loading-text" key={messageIndex}>
           {STATUS_MESSAGES[messageIndex]}
         </span>
-        <div className="loading-dots-inline">
-          <span className="ldot">.</span>
-          <span className="ldot">.</span>
-          <span className="ldot">.</span>
-        </div>
       </div>
     </div>
   );

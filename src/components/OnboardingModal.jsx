@@ -57,8 +57,8 @@ function OnboardingModal({ onDismiss }) {
           <div className="warmup-state">
             <div className="warmup-spinner-container">
               <svg className="warmup-spinner" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                <circle className="warmup-spinner-track" cx="25" cy="25" r="20" />
-                <circle className="warmup-spinner-arc" cx="25" cy="25" r="20" />
+                <circle className="warmup-spinner-track" cx="25" cy="25" r="20" fill="none" strokeWidth="4" />
+                <circle className="warmup-spinner-arc" cx="25" cy="25" r="20" fill="none" strokeWidth="4" />
               </svg>
             </div>
             <h2>Preparing your session</h2>
@@ -72,20 +72,16 @@ function OnboardingModal({ onDismiss }) {
         {/* Phase 3: Error */}
         {phase === 'error' && (
           <div className="warmup-error-state">
-            <div className="error-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div className="error-icon" style={{marginBottom: '1.5rem'}}>
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="10" stroke="#ef4444" strokeWidth="2" />
                 <path d="M12 8v4" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
                 <circle cx="12" cy="16" r="1" fill="#ef4444" />
               </svg>
             </div>
             <h2 className="error-heading">Connection Failed</h2>
-            <p className="error-text">{errorMsg}</p>
-            <button className="modal-btn retry-btn" onClick={handleWarmup}>
-              <svg className="retry-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 4v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3.51 15a9 9 0 105.64-8.36L1 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+            <p className="error-text" style={{marginBottom: '2rem'}}>{errorMsg}</p>
+            <button className="modal-btn" onClick={handleWarmup}>
               Retry Connection
             </button>
           </div>
