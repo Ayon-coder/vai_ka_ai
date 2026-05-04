@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { sendChat } from './api';
 import Header from './components/Header';
 import ChatArea from './components/ChatArea';
@@ -25,6 +25,44 @@ const MODE_CONTENT = {
   },
 };
 
+// ── Strike / Ban helpers (localStorage) ─────────────────────────────────────
+const STRIKE_KEY = 'vai_strikes';
+const BAN_KEY = 'vai_ban_until';
+const MAX_STRIKES = 3;
+const BAN_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+
+function getStrikes() {
+  return parseInt(localStorage.getItem(STRIKE_KEY) || '0', 10);
+}
+function setStrikes(n) {
+  localStorage.setItem(STRIKE_KEY, String(n));
+}
+function getBanUntil() {
+  return parseInt(localStorage.getItem(BAN_KEY) || '0', 10);
+}
+function setBan() {
+  localStorage.setItem(BAN_KEY, String(Date.now() + BAN_DURATION_MS));
+  setStrikes(0); // reset strikes after ban is set
+}
+function clearBan() {
+  localStorage.removeItem(BAN_KEY);
+  setStrikes(0);
+}
+function isBanned() {
+  const until = getBanUntil();
+  if (!until) return false;
+  if (Date.now() >= until) {
+    clearBan();
+    return false;
+  }
+  return true;
+}
+function banRemainingMinutes() {
+  const until = getBanUntil();
+  if (!until) return 0;
+  return Math.max(0, Math.ceil((until - Date.now()) / 60000));
+}
+
 function App() {
   const [messages, setMessages] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
@@ -34,7 +72,20 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [showGuideTooltip, setShowGuideTooltip] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [banned, setBanned] = useState(isBanned());
   const chatWrapperRef = useRef(null);
+
+  // Check ban status periodically (so countdown updates)
+  useEffect(() => {
+    if (!banned) return;
+    const timer = setInterval(() => {
+      if (!isBanned()) {
+        setBanned(false);
+        clearInterval(timer);
+      }
+    }, 15000); // check every 15s
+    return () => clearInterval(timer);
+  }, [banned]);
 
   const scrollToBottom = useCallback(() => {
     if (chatWrapperRef.current) {
@@ -47,6 +98,22 @@ function App() {
 
   const handleSendMessage = useCallback(async (text) => {
     if (!text.trim()) return;
+
+    // ── Ban check ──
+    if (isBanned()) {
+      setBanned(true);
+      const mins = banRemainingMinutes();
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: `🚫 You're temporarily on cooldown for ${mins} more minute${mins !== 1 ? 's' : ''}. Please come back later!`,
+          sources: [],
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
 
     setShowWelcome(false);
 
@@ -63,6 +130,33 @@ function App() {
 
     try {
       const data = await sendChat(newHistory, mode);
+
+      // ── Watcher warning handler ──
+      if (data.is_warning) {
+        const currentStrikes = getStrikes() + 1;
+        setStrikes(currentStrikes);
+
+        let warningContent;
+        if (currentStrikes >= MAX_STRIKES) {
+          setBan();
+          setBanned(true);
+          warningContent = `🚫 Too many nonsense messages. You've been put on a 30-minute cooldown. Please use this time wisely!`;
+        } else {
+          warningContent = `⚠️ Warning ${currentStrikes}/${MAX_STRIKES}: Please send meaningful messages. ${MAX_STRIKES - currentStrikes} more warning${MAX_STRIKES - currentStrikes !== 1 ? 's' : ''} before a temporary cooldown.`;
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: warningContent,
+            sources: [],
+            timestamp: new Date(),
+          },
+        ]);
+        // Don't add warning to chat history
+        return;
+      }
 
       if (data.choices && data.choices[0]) {
         const assistantContent = data.choices[0].message.content;
@@ -151,7 +245,7 @@ function App() {
           isReady={isReady}
         />
 
-        <InputArea onSend={handleSendMessage} disabled={!isReady} />
+        <InputArea onSend={handleSendMessage} disabled={!isReady || banned} />
       </div>
 
       {showOnboarding && (
