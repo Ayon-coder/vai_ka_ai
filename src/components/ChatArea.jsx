@@ -9,6 +9,7 @@ const ChatArea = forwardRef(function ChatArea(
 ) {
   return (
     <main className="chat-wrapper" id="chat-wrapper" ref={ref}>
+      <div className="chat-inner-container">
       {showWelcome && (
         <div className="welcome-container">
           <h2>Hi, I'm Vai.</h2>
@@ -49,6 +50,7 @@ const ChatArea = forwardRef(function ChatArea(
           </div>
         )
       )}
+      </div>
     </main>
   );
 });
