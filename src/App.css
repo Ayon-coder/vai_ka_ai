@@ -220,6 +220,11 @@ body {
     flex-direction: column;
     gap: 2.5rem;
     scrollbar-width: thin;
+    direction: rtl;
+}
+
+.chat-wrapper > * {
+    direction: ltr;
 }
 
 /* Welcome Screen */
@@ -303,12 +308,12 @@ body {
 }
 
 .message.user {
-    align-self: flex-end;
+    align-self: flex-start; /* in RTL, flex-start is right */
     flex-direction: row-reverse;
 }
 
 .message.assistant {
-    align-self: flex-start;
+    align-self: flex-end; /* in RTL, flex-end is left */
 }
 
 .avatar {
@@ -684,6 +689,66 @@ textarea::placeholder {
     background: linear-gradient(135deg, var(--primary-light), var(--primary));
     transform: translateY(-3px);
     box-shadow: 0 15px 30px rgba(99, 102, 241, 0.5);
+}
+
+/* Warmup States */
+.warmup-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.warmup-spinner-container {
+    width: 4rem;
+    height: 4rem;
+}
+
+.warmup-spinner {
+    width: 100%;
+    height: 100%;
+    animation: spinRotate 1.2s linear infinite;
+}
+
+.warmup-spinner-track {
+    stroke: var(--border-glass);
+}
+
+.warmup-spinner-arc {
+    stroke: var(--primary-light);
+    stroke-linecap: round;
+    stroke-dasharray: 90 126;
+}
+
+.warmup-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.warmup-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--bg-glass);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.warmup-progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    width: 0%;
+    animation: warmupProgress 4s ease-in-out infinite;
+}
+
+@keyframes warmupProgress {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+@keyframes spinRotate {
+    to { transform: rotate(360deg); }
 }
 
 /* Loading Indicator */
