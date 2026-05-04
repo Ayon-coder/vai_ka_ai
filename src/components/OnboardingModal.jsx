@@ -33,24 +33,21 @@ function OnboardingModal({ onDismiss }) {
         {/* Phase 1: Intro / Guidelines */}
         {phase === 'intro' && (
           <>
-            <h2>Welcome to Vai AI Platform</h2>
-            <p>Your intelligent companion for all things IEEE. Please follow these guidelines for the best experience:</p>
+            <h2>Welcome to Vai ka AI</h2>
+            <p>Your intelligent companion for all things IEEE. Designed for research and branch excellence.</p>
             <ul className="modal-list">
               <li>
-                <strong>Select your mode:</strong> Use <em>Deep Dive</em> for technical research and <em>Student Branch</em> for activities.
+                <span><strong>Dual Modes:</strong> Research with <em>Deep Dive</em> or stay local with <em>Student Branch</em>.</span>
               </li>
               <li>
-                <strong>Be precise:</strong> Detailed queries help the AI find exactly what you need.
+                <span><strong>Real-time Sources:</strong> Technical answers are backed by verified IEEE references.</span>
               </li>
               <li>
-                <strong>Verify information:</strong> Check the provided IEEE sources in Deep Dive mode for technical accuracy.
-              </li>
-              <li>
-                <strong>Stay professional:</strong> Maintain a respectful tone in your interactions.
+                <span><strong>Guidelines:</strong> Detailed queries help the AI find exactly what you need.</span>
               </li>
             </ul>
             <button id="onboarding-btn" className="modal-btn" onClick={handleWarmup}>
-              I Understand
+              Start Exploring
             </button>
           </>
         )}
@@ -64,8 +61,8 @@ function OnboardingModal({ onDismiss }) {
                 <circle className="warmup-spinner-arc" cx="25" cy="25" r="20" />
               </svg>
             </div>
-            <h2>Setting things up</h2>
-            <p className="warmup-text">We are creating the environment for you, please wait for a bit...</p>
+            <h2>Preparing your session</h2>
+            <p className="warmup-text">Initializing the AI environment and connecting to IEEE knowledge bases...</p>
             <div className="warmup-progress-bar">
               <div className="warmup-progress-fill"></div>
             </div>

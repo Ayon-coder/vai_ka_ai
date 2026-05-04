@@ -8,19 +8,19 @@ import './App.css';
 
 const MODE_CONTENT = {
   deep_dive: {
-    description: 'Advanced search for IEEE.org technical research, standards, and global engineering trends.',
+    description: 'Technical research, IEEE standards, and global engineering trends.',
     suggestions: [
-      'Explain the IEEE 802.11 standard',
-      'How does IEEE 754 floating point work?',
-      'What is the latest in 6G research?',
+      'Explain IEEE 802.11 standard',
+      'Latest trends in 6G research',
+      'IEEE 754 floating point guide',
     ],
   },
   student_branch: {
-    description: 'Your local assistant for IEEE Student Branch events, membership, and branch activities.',
+    description: 'IEEE Student Branch events, membership, and activities.',
     suggestions: [
-      'Who are our current committee members?',
-      'What events are scheduled for this month?',
-      'How can I join the Student Branch?',
+      'Upcoming branch events',
+      'Current committee members',
+      'Membership benefits',
     ],
   },
 };

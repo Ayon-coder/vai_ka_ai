@@ -11,7 +11,7 @@ const ChatArea = forwardRef(function ChatArea(
     <main className="chat-wrapper" id="chat-wrapper" ref={ref}>
       {showWelcome && (
         <div className="welcome-container">
-          <h2>Hello! I'm vai.</h2>
+          <h2>Hi, I'm Vai.</h2>
           <p id="welcome-desc">{modeContent.description}</p>
           <div className="suggestions">
             {modeContent.suggestions.map((text, idx) => (
