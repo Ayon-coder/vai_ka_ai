@@ -44,6 +44,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     height: 100vh;
+<<<<<<< HEAD
     height: 100dvh;
     overflow: hidden;
 }
@@ -64,6 +65,8 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-tertiary);
+=======
+>>>>>>> parent of a11f570 (vai ka baddie ko aur sundar bana diya (mobbile responsive))
 }
 
 /* Background Effects */
@@ -84,7 +87,6 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     height: 100vh;
-    height: 100dvh;
     display: flex;
     flex-direction: column;
     padding: 0 20px;
@@ -527,6 +529,21 @@ textarea::placeholder {
     cursor: not-allowed;
 }
 
+<<<<<<< HEAD
+=======
+#send-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .app-container { padding: 10px; }
+    .welcome-container h2 { font-size: 2rem; }
+    .message { max-width: 95%; }
+}
+
+>>>>>>> parent of a11f570 (vai ka baddie ko aur sundar bana diya (mobbile responsive))
 /* Onboarding Modal */
 .modal-overlay {
     position: fixed;
@@ -621,8 +638,78 @@ textarea::placeholder {
     box-shadow: 0 0 20px rgba(79, 70, 229, 0.4);
 }
 
+<<<<<<< HEAD
 /* Warmup States */
 .warmup-state {
+=======
+/* Guide Tooltip */
+.guide-tooltip {
+    position: absolute;
+    top: 55px;
+    left: 0;
+    z-index: 9998;
+    max-width: 280px;
+    animation: pulse 2s infinite ease-in-out;
+}
+
+.tooltip-content {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(99,102,241, 0.4);
+    position: relative;
+}
+
+.tooltip-arrow {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid var(--primary-color);
+}
+
+.guide-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 15px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-top: 10px;
+    backdrop-filter: blur(5px);
+    transition: all 0.2s ease;
+}
+
+.guide-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+@media (max-width: 640px) {
+    .modal-content { padding: 30px 20px; }
+    .guide-tooltip { 
+        right: 10px; 
+        left: 10px; 
+        max-width: none; 
+        top: 75px;
+    }
+    .tooltip-arrow { right: 80px; }
+}
+
+/* ===== Deep Dive Loading Indicator ===== */
+.loading-indicator {
+>>>>>>> parent of a11f570 (vai ka baddie ko aur sundar bana diya (mobbile responsive))
     display: flex;
     flex-direction: column;
     align-items: center;
