@@ -73,17 +73,21 @@ function App() {
   const [showGuideTooltip, setShowGuideTooltip] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [banned, setBanned] = useState(isBanned());
+  const [banMins, setBanMins] = useState(banRemainingMinutes());
   const chatWrapperRef = useRef(null);
 
-  // Check ban status periodically (so countdown updates)
+  // Live countdown — ticks every second while banned
   useEffect(() => {
     if (!banned) return;
     const timer = setInterval(() => {
       if (!isBanned()) {
         setBanned(false);
+        setBanMins(0);
         clearInterval(timer);
+      } else {
+        setBanMins(banRemainingMinutes());
       }
-    }, 15000); // check every 15s
+    }, 1000);
     return () => clearInterval(timer);
   }, [banned]);
 
@@ -244,6 +248,16 @@ function App() {
           mode={mode}
           isReady={isReady}
         />
+
+        {banned && (
+          <div className="ban-banner">
+            <div className="ban-banner-icon">🚫</div>
+            <div className="ban-banner-text">
+              <strong>You've been temporarily blocked</strong>
+              <span>Too many inappropriate messages. Try again in <b>{banMins}</b> minute{banMins !== 1 ? 's' : ''}.</span>
+            </div>
+          </div>
+        )}
 
         <InputArea onSend={handleSendMessage} disabled={!isReady || banned} />
       </div>

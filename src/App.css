@@ -971,3 +971,48 @@ textarea::placeholder {
         right: 0;
     }
 }
+
+/* ── Ban Banner ─────────────────────────────────────────────────────────────── */
+.ban-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    margin: 0 1rem 0.5rem;
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(220, 38, 38, 0.05));
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    border-radius: var(--radius-xl);
+    backdrop-filter: blur(12px);
+    animation: ban-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ban-pulse {
+    0%, 100% { border-color: rgba(220, 38, 38, 0.3); }
+    50% { border-color: rgba(220, 38, 38, 0.6); }
+}
+
+.ban-banner-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.ban-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ban-banner-text strong {
+    color: #fca5a5;
+    font-size: 0.95rem;
+}
+
+.ban-banner-text span {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.ban-banner-text b {
+    color: #f87171;
+    font-size: 1.1rem;
+}
