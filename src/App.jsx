@@ -8,6 +8,8 @@ import './App.css';
 
 const MODE_CONTENT = {
   deep_dive: {
+    label: 'Deep Dive',
+    code: 'DD-01',
     description: 'Technical research, IEEE standards, and global engineering trends.',
     suggestions: [
       'Explain IEEE 802.11 standard',
@@ -16,6 +18,8 @@ const MODE_CONTENT = {
     ],
   },
   student_branch: {
+    label: 'Student Branch',
+    code: 'SB-02',
     description: 'IEEE Student Branch events, membership, and activities.',
     suggestions: [
       'Upcoming branch events',
@@ -25,11 +29,10 @@ const MODE_CONTENT = {
   },
 };
 
-// ── Strike / Ban helpers (localStorage) ─────────────────────────────────────
 const STRIKE_KEY = 'vai_strikes';
 const BAN_KEY = 'vai_ban_until';
 const MAX_STRIKES = 3;
-const BAN_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+const BAN_DURATION_MS = 30 * 60 * 1000;
 
 function getStrikes() {
   return parseInt(localStorage.getItem(STRIKE_KEY) || '0', 10);
@@ -42,7 +45,7 @@ function getBanUntil() {
 }
 function setBan() {
   localStorage.setItem(BAN_KEY, String(Date.now() + BAN_DURATION_MS));
-  setStrikes(0); // reset strikes after ban is set
+  setStrikes(0);
 }
 function clearBan() {
   localStorage.removeItem(BAN_KEY);
@@ -74,9 +77,9 @@ function App() {
   const [isReady, setIsReady] = useState(false);
   const [banned, setBanned] = useState(isBanned());
   const [banMins, setBanMins] = useState(banRemainingMinutes());
+  const [cursorPos, setCursorPos] = useState({ x: 50, y: 50 });
   const chatWrapperRef = useRef(null);
 
-  // Live countdown — ticks every second while banned
   useEffect(() => {
     if (!banned) return;
     const timer = setInterval(() => {
@@ -91,6 +94,17 @@ function App() {
     return () => clearInterval(timer);
   }, [banned]);
 
+  useEffect(() => {
+    const handleMove = (e) => {
+      setCursorPos({
+        x: (e.clientX / window.innerWidth) * 100,
+        y: (e.clientY / window.innerHeight) * 100,
+      });
+    };
+    window.addEventListener('pointermove', handleMove);
+    return () => window.removeEventListener('pointermove', handleMove);
+  }, []);
+
   const scrollToBottom = useCallback(() => {
     if (chatWrapperRef.current) {
       chatWrapperRef.current.scrollTo({
@@ -100,7 +114,6 @@ function App() {
     }
   }, []);
 
-  // Scroll to bottom after every message update or typing state change
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
@@ -108,7 +121,6 @@ function App() {
   const handleSendMessage = useCallback(async (text) => {
     if (!text.trim()) return;
 
-    // ── Ban check ──
     if (isBanned()) {
       setBanned(true);
       const mins = banRemainingMinutes();
@@ -126,11 +138,9 @@ function App() {
 
     setShowWelcome(false);
 
-    // Add user message to display
     const userMsg = { role: 'user', content: text, timestamp: new Date() };
     setMessages((prev) => [...prev, userMsg]);
 
-    // Add to chat history for API
     const newHistory = [...chatHistory, { role: 'user', content: text }];
     setChatHistory(newHistory);
 
@@ -139,7 +149,6 @@ function App() {
     try {
       const data = await sendChat(newHistory, mode);
 
-      // ── Watcher warning handler ──
       if (data.is_warning) {
         const currentStrikes = getStrikes() + 1;
         setStrikes(currentStrikes);
@@ -162,7 +171,6 @@ function App() {
             timestamp: new Date(),
           },
         ]);
-        // Don't add warning to chat history
         return;
       }
 
@@ -205,7 +213,7 @@ function App() {
     } finally {
       setIsTyping(false);
     }
-  }, [chatHistory, mode, scrollToBottom]);
+  }, [chatHistory, mode]);
 
   const handleModeChange = useCallback((newMode) => {
     setMode(newMode);
@@ -228,18 +236,48 @@ function App() {
 
   return (
     <>
-      <div className="app-background">
-        <div className="glow-circle top-left"></div>
-        <div className="glow-circle bottom-right"></div>
+      <div
+        className="bg"
+        style={{
+          '--mx': `${cursorPos.x}%`,
+          '--my': `${cursorPos.y}%`,
+        }}
+        aria-hidden="true"
+      >
+        <div className="bg__grid"></div>
+        <div className="bg__noise"></div>
+        <div className="bg__glow"></div>
+        <div className="bg__scan"></div>
       </div>
 
-      <div className="app-container">
+      <div className="shell">
         <Header
           mode={mode}
+          modes={MODE_CONTENT}
           onModeChange={handleModeChange}
           showGuideTooltip={showGuideTooltip}
           onGuideTooltipDismiss={handleGuideTooltipDismiss}
         />
+
+        <div className="statusbar" aria-hidden="true">
+          <div className="statusbar__group">
+            <span className="statusbar__label">SYS</span>
+            <span className="statusbar__value">VAI.CORE</span>
+          </div>
+          <div className="statusbar__group">
+            <span className="statusbar__label">CHAN</span>
+            <span className="statusbar__value">{currentModeContent.code}</span>
+          </div>
+          <div className="statusbar__group statusbar__group--grow">
+            <span className="statusbar__bar"></span>
+          </div>
+          <div className="statusbar__group">
+            <span className="statusbar__label">STATE</span>
+            <span className={`statusbar__value ${isTyping ? 'statusbar__value--active' : ''}`}>
+              {!isReady ? 'BOOT' : banned ? 'LOCKED' : isTyping ? 'PROCESSING' : 'READY'}
+            </span>
+          </div>
+        </div>
 
         <ChatArea
           ref={chatWrapperRef}
@@ -253,11 +291,16 @@ function App() {
         />
 
         {banned && (
-          <div className="ban-banner">
-            <div className="ban-banner-icon">🚫</div>
-            <div className="ban-banner-text">
-              <strong>You've been temporarily blocked</strong>
-              <span>Too many inappropriate messages. Try again in <b>{banMins}</b> minute{banMins !== 1 ? 's' : ''}.</span>
+          <div className="ban">
+            <div className="ban__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+              </svg>
+            </div>
+            <div className="ban__text">
+              <strong>SESSION LOCKED</strong>
+              <span>Cooldown: <b>{banMins}</b> min{banMins !== 1 ? 's' : ''} remaining</span>
             </div>
           </div>
         )}
@@ -266,11 +309,12 @@ function App() {
           onSend={handleSendMessage}
           disabled={!isReady || banned || isTyping}
           placeholder={
-            !isReady ? 'Initializing...' :
-            banned ? "You're on cooldown..." :
+            !isReady ? 'Initializing system...' :
+            banned ? 'Session locked...' :
             isTyping ? 'Vai is thinking...' :
-            'Message Vai...'
+            'Transmit message to Vai...'
           }
+          modeCode={currentModeContent.code}
         />
       </div>
 

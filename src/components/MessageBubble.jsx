@@ -1,7 +1,7 @@
 import { useMemo, memo } from 'react';
 import { marked } from 'marked';
+import { sanitizeHtml } from '../utils/sanitize';
 
-// Configure marked
 marked.setOptions({
   breaks: true,
   gfm: true,
@@ -10,58 +10,64 @@ marked.setOptions({
 function MessageBubble({ role, content, sources = [], timestamp }) {
   const timeStr = useMemo(() => {
     const d = timestamp ? new Date(timestamp) : new Date();
-    return `${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   }, [timestamp]);
 
   const renderedContent = useMemo(() => {
     if (role === 'assistant') {
-      return { __html: marked.parse(content || '') };
+      const raw = marked.parse(content || '');
+      return { __html: sanitizeHtml(raw) };
     }
     return null;
   }, [role, content]);
 
   return (
-    <div className={`message ${role}`} role="article" aria-label={`${role === 'user' ? 'Your' : 'AI'} message`}>
-      <div className="avatar" aria-hidden="true">
-        {role === 'user' ? (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-            <line x1="12" y1="22.08" x2="12" y2="12" />
-          </svg>
-        )}
+    <div className={`msg msg--${role}`} role="article" aria-label={`${role === 'user' ? 'Your' : 'AI'} message`}>
+      <div className="msg__rail" aria-hidden="true">
+        <span className="msg__rail-tick"></span>
+        <span className="msg__rail-line"></span>
+        <span className="msg__rail-tick"></span>
       </div>
-      <div className="message-content-wrapper">
-        <div className="message-info">
-          <span>{role === 'user' ? 'You' : 'Vai ka AI'}</span>
-          <span>{timeStr}</span>
+
+      <div className="msg__body">
+        <div className="msg__meta">
+          <span className="msg__author">
+            {role === 'user' ? 'USER' : 'VAI'}
+            <span className="msg__author-dot"></span>
+          </span>
+          <span className="msg__time">{timeStr}</span>
         </div>
-        <div className="message-bubble">
-          <div className="message-content">
+
+        <div className="msg__panel">
+          <span className="msg__corner msg__corner--tl" aria-hidden="true"></span>
+          <span className="msg__corner msg__corner--tr" aria-hidden="true"></span>
+          <span className="msg__corner msg__corner--bl" aria-hidden="true"></span>
+          <span className="msg__corner msg__corner--br" aria-hidden="true"></span>
+
+          <div className="msg__content">
             {role === 'assistant' ? (
               <div dangerouslySetInnerHTML={renderedContent} />
             ) : (
-              content
+              <span>{content}</span>
             )}
           </div>
 
           {sources && sources.length > 0 && (
-            <div className="sources-container">
-              <span className="sources-title">Verified IEEE References</span>
-              <ul className="source-list">
+            <div className="msg__sources">
+              <span className="msg__sources-label">
+                <span className="msg__sources-bracket">[</span>
+                VERIFIED IEEE REFERENCES
+                <span className="msg__sources-bracket">]</span>
+              </span>
+              <ul className="msg__sources-list">
                 {sources.map((src, idx) => (
-                  <li key={idx} className="source-item">
+                  <li key={idx} className="msg__source">
                     <a href={src.link} target="_blank" rel="noopener noreferrer" title={src.title}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px', verticalAlign: 'middle'}}>
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                      <span className="msg__source-idx">{String(idx + 1).padStart(2, '0')}</span>
+                      <span className="msg__source-title">{src.title}</span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M7 17L17 7M17 7H7M17 7V17" />
                       </svg>
-                      {src.title}
                     </a>
                   </li>
                 ))}

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 
 const STATUS_MESSAGES = [
-  'We got your request',
-  'Model working on it',
-  'Searching IEEE sources',
-  'Fetching your response',
-  'Response will be ready in seconds',
+  { code: '001', text: 'Request received' },
+  { code: '002', text: 'Engaging language model' },
+  { code: '003', text: 'Querying IEEE Xplore index' },
+  { code: '004', text: 'Synthesizing response' },
+  { code: '005', text: 'Verifying sources' },
 ];
 
 function LoadingIndicator() {
@@ -15,22 +15,27 @@ function LoadingIndicator() {
     const interval = setInterval(() => {
       setMessageIndex((prev) => (prev < STATUS_MESSAGES.length - 1 ? prev + 1 : prev));
     }, 2500);
-
     return () => clearInterval(interval);
   }, []);
 
+  const current = STATUS_MESSAGES[messageIndex];
+
   return (
-    <div className="loading-indicator">
-      <div className="spinner-container">
-        <svg className="spinner" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-          <circle className="spinner-track" cx="20" cy="20" r="16" fill="none" strokeWidth="3" />
-          <circle className="spinner-arc" cx="20" cy="20" r="16" fill="none" strokeWidth="3" />
-        </svg>
-      </div>
-      <div className="loading-text-container">
-        <span className="loading-text" key={messageIndex}>
-          {STATUS_MESSAGES[messageIndex]}
-        </span>
+    <div className="loader">
+      <div className="loader__inner">
+        <div className="loader__corner loader__corner--tl" aria-hidden="true"></div>
+        <div className="loader__corner loader__corner--tr" aria-hidden="true"></div>
+        <div className="loader__corner loader__corner--bl" aria-hidden="true"></div>
+        <div className="loader__corner loader__corner--br" aria-hidden="true"></div>
+
+        <div className="loader__head">
+          <span className="loader__step">STEP {current.code}/005</span>
+          <span className="loader__dot" aria-hidden="true"></span>
+        </div>
+        <div className="loader__text" key={messageIndex}>{current.text}</div>
+        <div className="loader__progress" aria-hidden="true">
+          <span style={{ width: `${((messageIndex + 1) / STATUS_MESSAGES.length) * 100}%` }}></span>
+        </div>
       </div>
     </div>
   );

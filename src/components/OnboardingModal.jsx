@@ -1,24 +1,38 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { warmup } from '../api';
 
+const BOOT_LINES = [
+  '> initiating handshake...',
+  '> dialing IEEE knowledge cluster',
+  '> establishing secure channel',
+  '> loading neural inference layer',
+  '> calibrating context window',
+  '> session ready',
+];
+
 function OnboardingModal({ onDismiss }) {
-  const [phase, setPhase] = useState('intro'); // 'intro' | 'warming' | 'error'
+  const [phase, setPhase] = useState('intro');
   const [errorMsg, setErrorMsg] = useState('');
+  const [bootStep, setBootStep] = useState(0);
+
+  useEffect(() => {
+    if (phase !== 'warming') return;
+    setBootStep(0);
+    const t = setInterval(() => {
+      setBootStep((s) => Math.min(s + 1, BOOT_LINES.length - 1));
+    }, 700);
+    return () => clearInterval(t);
+  }, [phase]);
 
   const handleWarmup = useCallback(async () => {
     setPhase('warming');
     setErrorMsg('');
-
     try {
-      console.log('Triggering backend warmup...');
       const result = await warmup();
-
       if (!result) {
         throw new Error('No response from backend');
       }
-
-      console.log('Backend warmed up successfully.');
-      onDismiss();
+      setTimeout(() => onDismiss(), 800);
     } catch (e) {
       console.error('Warmup failed:', e);
       setPhase('error');
@@ -27,66 +41,102 @@ function OnboardingModal({ onDismiss }) {
   }, [onDismiss]);
 
   return (
-    <div id="onboarding-overlay" className="modal-overlay">
-      <div className="modal-content">
+    <div className="modal">
+      <div className="modal__backdrop" aria-hidden="true">
+        <div className="modal__grid"></div>
+      </div>
+      <div className="modal__panel">
+        <span className="modal__corner modal__corner--tl" aria-hidden="true"></span>
+        <span className="modal__corner modal__corner--tr" aria-hidden="true"></span>
+        <span className="modal__corner modal__corner--bl" aria-hidden="true"></span>
+        <span className="modal__corner modal__corner--br" aria-hidden="true"></span>
 
-        {/* Phase 1: Intro / Guidelines */}
+        <div className="modal__topbar" aria-hidden="true">
+          <span className="modal__dot"></span>
+          <span className="modal__dot"></span>
+          <span className="modal__dot"></span>
+          <span className="modal__path">~/vai/session/new</span>
+        </div>
+
         {phase === 'intro' && (
-          <>
-            <h2>Welcome to Vai ka AI</h2>
-            <p>Your intelligent companion for all things IEEE. Designed for research and branch excellence.</p>
-            <ul className="modal-list">
+          <div className="modal__inner">
+            <div className="modal__tag">[BRIEFING · 001]</div>
+            <h2 className="modal__title">
+              Welcome to <span className="modal__title-accent">Vai ka AI</span>
+            </h2>
+            <p className="modal__lead">
+              Your intelligent companion for all things IEEE. Built for research and branch excellence.
+            </p>
+
+            <ul className="modal__list">
               <li>
-                <span><strong>Dual Modes:</strong> Research with <em>Deep Dive</em> or stay local with <em>Student Branch</em>.</span>
+                <span className="modal__list-num">01</span>
+                <div>
+                  <strong>Dual channels</strong>
+                  <span>Switch between <em>Deep Dive</em> research and <em>Student Branch</em> intel.</span>
+                </div>
               </li>
               <li>
-                <span><strong>Real-time Sources:</strong> Technical answers are backed by verified IEEE references.</span>
+                <span className="modal__list-num">02</span>
+                <div>
+                  <strong>Verified citations</strong>
+                  <span>Every technical answer is anchored to real IEEE references.</span>
+                </div>
               </li>
               <li>
-                <span><strong>Guidelines:</strong> Detailed queries help the AI find exactly what you need.</span>
+                <span className="modal__list-num">03</span>
+                <div>
+                  <strong>Ask sharply</strong>
+                  <span>Specific queries surface specific answers — vague ones get vague replies.</span>
+                </div>
               </li>
             </ul>
-            <button id="onboarding-btn" className="modal-btn" onClick={handleWarmup}>
-              Start Exploring
+
+            <button className="modal__btn" onClick={handleWarmup}>
+              <span>INITIATE SESSION</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
             </button>
-          </>
+          </div>
         )}
 
-        {/* Phase 2: Warming up */}
         {phase === 'warming' && (
-          <div className="warmup-state">
-            <div className="warmup-spinner-container">
-              <svg className="warmup-spinner" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                <circle className="warmup-spinner-track" cx="25" cy="25" r="20" fill="none" strokeWidth="4" />
-                <circle className="warmup-spinner-arc" cx="25" cy="25" r="20" fill="none" strokeWidth="4" />
-              </svg>
+          <div className="modal__inner modal__inner--boot">
+            <div className="modal__tag">[BOOTING SESSION]</div>
+            <h2 className="modal__title">Coming online</h2>
+            <div className="boot">
+              {BOOT_LINES.slice(0, bootStep + 1).map((line, i) => (
+                <div key={i} className={`boot__line ${i === bootStep ? 'boot__line--active' : ''}`}>
+                  <span className="boot__num">[{String(i + 1).padStart(2, '0')}]</span>
+                  <span className="boot__txt">{line}</span>
+                  {i === bootStep && <span className="boot__cursor"></span>}
+                </div>
+              ))}
             </div>
-            <h2>Preparing your session</h2>
-            <p className="warmup-text">Initializing the AI environment and connecting to IEEE knowledge bases...</p>
-            <div className="warmup-progress-bar">
-              <div className="warmup-progress-fill"></div>
+            <div className="boot__bar" aria-hidden="true">
+              <span style={{ width: `${((bootStep + 1) / BOOT_LINES.length) * 100}%` }}></span>
             </div>
           </div>
         )}
 
-        {/* Phase 3: Error */}
         {phase === 'error' && (
-          <div className="warmup-error-state">
-            <div className="error-icon" style={{marginBottom: '1.5rem'}}>
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="#ef4444" strokeWidth="2" />
-                <path d="M12 8v4" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                <circle cx="12" cy="16" r="1" fill="#ef4444" />
+          <div className="modal__inner modal__inner--err">
+            <div className="modal__tag modal__tag--err">[FAULT · 502]</div>
+            <div className="modal__err-icon" aria-hidden="true">
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </div>
-            <h2 className="error-heading">Connection Failed</h2>
-            <p className="error-text" style={{marginBottom: '2rem'}}>{errorMsg}</p>
-            <button className="modal-btn" onClick={handleWarmup}>
-              Retry Connection
+            <h2 className="modal__title">Connection failed</h2>
+            <p className="modal__lead">{errorMsg}</p>
+            <button className="modal__btn modal__btn--retry" onClick={handleWarmup}>
+              <span>RETRY HANDSHAKE</span>
             </button>
           </div>
         )}
-
       </div>
     </div>
   );
