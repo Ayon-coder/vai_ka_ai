@@ -6,6 +6,9 @@ export async function sendChat(messages, mode) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages, mode }),
   });
+  if (!response.ok) {
+    throw new Error(`Chat request failed with status ${response.status}`);
+  }
   return response.json();
 }
 

@@ -100,6 +100,11 @@ function App() {
     }
   }, []);
 
+  // Scroll to bottom after every message update or typing state change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping, scrollToBottom]);
+
   const handleSendMessage = useCallback(async (text) => {
     if (!text.trim()) return;
 
@@ -130,7 +135,6 @@ function App() {
     setChatHistory(newHistory);
 
     setIsTyping(true);
-    setTimeout(scrollToBottom, 50);
 
     try {
       const data = await sendChat(newHistory, mode);
@@ -200,7 +204,6 @@ function App() {
       ]);
     } finally {
       setIsTyping(false);
-      setTimeout(scrollToBottom, 50);
     }
   }, [chatHistory, mode, scrollToBottom]);
 
@@ -259,7 +262,16 @@ function App() {
           </div>
         )}
 
-        <InputArea onSend={handleSendMessage} disabled={!isReady || banned} />
+        <InputArea
+          onSend={handleSendMessage}
+          disabled={!isReady || banned || isTyping}
+          placeholder={
+            !isReady ? 'Initializing...' :
+            banned ? "You're on cooldown..." :
+            isTyping ? 'Vai is thinking...' :
+            'Message Vai...'
+          }
+        />
       </div>
 
       {showOnboarding && (

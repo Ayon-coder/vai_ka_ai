@@ -15,7 +15,7 @@ function MessageBubble({ role, content, sources = [], timestamp }) {
 
   const renderedContent = useMemo(() => {
     if (role === 'assistant') {
-      return { __html: marked.parse(content) };
+      return { __html: marked.parse(content || '') };
     }
     return null;
   }, [role, content]);

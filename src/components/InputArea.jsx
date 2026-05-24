@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 
-function InputArea({ onSend, disabled = false }) {
+function InputArea({ onSend, disabled = false, placeholder = 'Message Vai...' }) {
   const [value, setValue] = useState('');
   const textareaRef = useRef(null);
 
@@ -38,7 +38,7 @@ function InputArea({ onSend, disabled = false }) {
         <textarea
           ref={textareaRef}
           id="user-input"
-          placeholder={disabled ? 'Vai is thinking...' : 'Message Vai...'}
+          placeholder={placeholder}
           rows="1"
           value={value}
           onChange={handleInput}
