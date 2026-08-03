@@ -32,7 +32,7 @@ function MessageBubble({ role, content, sources = [], timestamp }) {
       <div className="msg__body">
         <div className="msg__meta">
           <span className="msg__author">
-            {role === 'user' ? 'USER' : 'VAI'}
+            {role === 'user' ? 'USER' : 'IEEE ASSISTANT'}
             <span className="msg__author-dot"></span>
           </span>
           <span className="msg__time">{timeStr}</span>

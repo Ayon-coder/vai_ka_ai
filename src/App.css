@@ -71,8 +71,8 @@ body {
     position: fixed; inset: 0; z-index: -1;
     background: var(--bg-0);
     overflow: hidden;
-    --mx: 50%;
-    --my: 50%;
+    --mx: 50vw;
+    --my: 50vh;
 }
 .bg__grid {
     position: absolute; inset: 0;
@@ -94,12 +94,13 @@ body {
 .bg__glow {
     position: absolute;
     width: 60vw; height: 60vw;
-    top: var(--my); left: var(--mx);
-    transform: translate(-50%, -50%);
+    top: 0; left: 0;
+    transform: translate3d(var(--mx), var(--my), 0) translate(-50%, -50%);
     background: radial-gradient(circle, rgba(0, 229, 255, 0.18), transparent 60%);
     filter: blur(80px);
     pointer-events: none;
-    transition: top 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), left 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
 }
 .bg__scan {
     position: absolute; inset: 0;
@@ -140,13 +141,7 @@ body {
 
 /* ─── HEADER ─────────────────────────────────────────────────────────────── */
 .hdr {
-    max-width: 1180px;
-    margin: 0 auto; width: 100%;
-    padding: 1.25rem 24px 0.75rem;
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 1rem;
-    position: relative;
-    z-index: 10;
+    display: none; /* parent IEEE site nav already provides the page header */
 }
 .hdr__brand {
     display: flex; align-items: center; gap: 0.85rem;
@@ -201,120 +196,42 @@ body {
 }
 
 .hdr__controls {
-    display: flex; align-items: center; gap: 1rem;
-    position: relative;
+    display: flex; align-items: center;
 }
 
-/* mode switch (segmented control) */
-.modeswitch {
-    position: relative;
+/* compact code-pill mode switcher (lives in the status bar) */
+.modepill {
     display: flex;
-    background: rgba(8, 12, 20, 0.6);
+    background: rgba(8, 12, 20, 0.55);
     border: 1px solid var(--line);
-    padding: 4px;
-    border-radius: var(--r-md);
-    backdrop-filter: blur(12px);
+    border-radius: var(--r-xs);
+    padding: 2px;
+    gap: 2px;
 }
-.modeswitch__tab {
-    position: relative;
-    z-index: 2;
+.modepill__btn {
     background: transparent;
     border: none;
     color: var(--txt-3);
-    padding: 0.55rem 1rem;
+    padding: 0.15rem 0.5rem;
     cursor: pointer;
-    font-family: var(--font-body);
-    font-size: 0.82rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    display: flex; flex-direction: column; align-items: flex-start;
-    gap: 2px;
-    transition: color 0.25s ease;
-    border-radius: var(--r-sm);
-}
-.modeswitch__tab.is-active {
-    color: var(--bg-0);
-}
-.modeswitch__tab:not(.is-active):hover {
-    color: var(--txt);
-}
-.modeswitch__code {
     font-family: var(--font-mono);
     font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    opacity: 0.7;
-    line-height: 1;
-}
-.modeswitch__label {
-    line-height: 1;
-}
-.modeswitch__indicator {
-    position: absolute;
-    z-index: 1;
-    top: 4px; left: 4px;
-    width: calc(50% - 4px); height: calc(100% - 8px);
-    background: linear-gradient(135deg, var(--cy), #65f0ff);
-    border-radius: calc(var(--r-sm) - 1px);
-    transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
-    box-shadow: 0 0 24px rgba(0, 229, 255, 0.4);
-}
-
-/* guide tooltip */
-.guide {
-    position: absolute;
-    top: calc(100% + 14px); right: 0;
-    width: 300px;
-    z-index: 100;
-    animation: guideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes guideIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.guide__arrow {
-    position: absolute; top: -7px; right: 70px;
-    width: 12px; height: 12px;
-    background: var(--bg-panel-solid);
-    border-left: 1px solid var(--cy);
-    border-top: 1px solid var(--cy);
-    transform: rotate(45deg);
-}
-.guide__body {
-    background: var(--bg-panel-solid);
-    border: 1px solid var(--cy);
-    padding: 1rem 1.25rem;
-    color: var(--txt);
-    box-shadow: 0 20px 50px -10px rgba(0, 229, 255, 0.3), 0 0 0 1px rgba(0, 229, 255, 0.1);
-    clip-path: var(--clip-notch);
-}
-.guide__body strong {
-    color: var(--cy);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-weight: 700;
     letter-spacing: 0.12em;
-    display: block;
-    margin-bottom: 0.5rem;
+    border-radius: calc(var(--r-xs) - 1px);
+    transition: color 0.2s ease, background 0.2s ease;
+    white-space: nowrap;
+    line-height: 1.6;
 }
-.guide__body p {
-    font-size: 0.88rem;
-    color: var(--txt-2);
-    margin-bottom: 0.85rem;
-    line-height: 1.5;
-}
-.guide__btn {
+.modepill__btn.is-active {
     background: var(--cy);
     color: var(--bg-0);
-    border: none;
-    padding: 0.55rem 1rem;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    cursor: pointer;
-    width: 100%;
-    transition: background 0.2s ease;
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
 }
-.guide__btn:hover { background: #65f0ff; }
+.modepill__btn:not(.is-active):hover {
+    color: var(--cy);
+    background: var(--cy-soft);
+}
 
 /* ─── STATUS BAR ─────────────────────────────────────────────────────────── */
 .statusbar {
@@ -1273,15 +1190,8 @@ body {
 /* ─── RESPONSIVE ────────────────────────────────────────────────────────── */
 @media (max-width: 860px) {
     .hdr {
-        padding: 1rem 16px 0.5rem;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.85rem;
+        padding: 0.5rem 16px;
     }
-    .hdr__brand { justify-content: flex-start; }
-    .hdr__controls { justify-content: space-between; }
-    .modeswitch { flex: 1; }
-    .modeswitch__tab { flex: 1; }
     .statusbar { padding: 0.5rem 16px; }
     .statusbar__group { gap: 0.35rem; }
     .chat__inner { padding: 0 16px; }

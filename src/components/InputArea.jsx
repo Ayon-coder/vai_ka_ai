@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 
-function InputArea({ onSend, disabled = false, placeholder = 'Message Vai...', modeCode }) {
+function InputArea({ onSend, disabled = false, placeholder = 'Message IEEE Assistant...', modeCode }) {
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
   const textareaRef = useRef(null);

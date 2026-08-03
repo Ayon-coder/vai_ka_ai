@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { sendChat } from './api';
 import Header from './components/Header';
 import ChatArea from './components/ChatArea';
@@ -29,8 +29,8 @@ const MODE_CONTENT = {
   },
 };
 
-const STRIKE_KEY = 'vai_strikes';
-const BAN_KEY = 'vai_ban_until';
+const STRIKE_KEY = 'ieee_assistant_strikes';
+const BAN_KEY = 'ieee_assistant_ban_until';
 const MAX_STRIKES = 3;
 const BAN_DURATION_MS = 30 * 60 * 1000;
 
@@ -73,12 +73,11 @@ function App() {
   const [isTyping, setIsTyping] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(true);
-  const [showGuideTooltip, setShowGuideTooltip] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [banned, setBanned] = useState(isBanned());
   const [banMins, setBanMins] = useState(banRemainingMinutes());
-  const [cursorPos, setCursorPos] = useState({ x: 50, y: 50 });
   const chatWrapperRef = useRef(null);
+  const bgRef = useRef(null);
 
   useEffect(() => {
     if (!banned) return;
@@ -95,14 +94,29 @@ function App() {
   }, [banned]);
 
   useEffect(() => {
-    const handleMove = (e) => {
-      setCursorPos({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      });
+    let raf = 0;
+    let pendingX = 0;
+    let pendingY = 0;
+
+    const apply = () => {
+      raf = 0;
+      const el = bgRef.current;
+      if (!el) return;
+      el.style.setProperty('--mx', `${pendingX}px`);
+      el.style.setProperty('--my', `${pendingY}px`);
     };
-    window.addEventListener('pointermove', handleMove);
-    return () => window.removeEventListener('pointermove', handleMove);
+
+    const handleMove = (e) => {
+      pendingX = e.clientX;
+      pendingY = e.clientY;
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+
+    window.addEventListener('pointermove', handleMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   const scrollToBottom = useCallback(() => {
@@ -225,25 +239,16 @@ function App() {
   const handleOnboardingDismiss = useCallback(() => {
     setShowOnboarding(false);
     setIsReady(true);
-    setShowGuideTooltip(true);
   }, []);
 
-  const handleGuideTooltipDismiss = useCallback(() => {
-    setShowGuideTooltip(false);
-  }, []);
-
-  const currentModeContent = MODE_CONTENT[mode] || MODE_CONTENT.deep_dive;
+  const currentModeContent = useMemo(
+    () => MODE_CONTENT[mode] || MODE_CONTENT.deep_dive,
+    [mode]
+  );
 
   return (
     <>
-      <div
-        className="bg"
-        style={{
-          '--mx': `${cursorPos.x}%`,
-          '--my': `${cursorPos.y}%`,
-        }}
-        aria-hidden="true"
-      >
+      <div className="bg" ref={bgRef} aria-hidden="true">
         <div className="bg__grid"></div>
         <div className="bg__noise"></div>
         <div className="bg__glow"></div>
@@ -255,14 +260,12 @@ function App() {
           mode={mode}
           modes={MODE_CONTENT}
           onModeChange={handleModeChange}
-          showGuideTooltip={showGuideTooltip}
-          onGuideTooltipDismiss={handleGuideTooltipDismiss}
         />
 
-        <div className="statusbar" aria-hidden="true">
+        <div className="statusbar">
           <div className="statusbar__group">
             <span className="statusbar__label">SYS</span>
-            <span className="statusbar__value">VAI.CORE</span>
+            <span className="statusbar__value">IEEE.ASSISTANT</span>
           </div>
           <div className="statusbar__group">
             <span className="statusbar__label">CHAN</span>
@@ -270,6 +273,26 @@ function App() {
           </div>
           <div className="statusbar__group statusbar__group--grow">
             <span className="statusbar__bar"></span>
+          </div>
+          <div className="statusbar__group">
+            <div className="modepill" role="tablist" aria-label="Select mode">
+              {Object.keys(MODE_CONTENT).map((k) => {
+                const m = MODE_CONTENT[k];
+                const active = mode === k;
+                return (
+                  <button
+                    key={k}
+                    role="tab"
+                    aria-selected={active}
+                    title={m.label}
+                    className={`modepill__btn ${active ? 'is-active' : ''}`}
+                    onClick={() => !active && handleModeChange(k)}
+                  >
+                    {m.code}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <div className="statusbar__group">
             <span className="statusbar__label">STATE</span>
@@ -311,8 +334,8 @@ function App() {
           placeholder={
             !isReady ? 'Initializing system...' :
             banned ? 'Session locked...' :
-            isTyping ? 'Vai is thinking...' :
-            'Transmit message to Vai...'
+            isTyping ? 'IEEE Assistant is thinking...' :
+            'Transmit message to IEEE Assistant...'
           }
           modeCode={currentModeContent.code}
         />

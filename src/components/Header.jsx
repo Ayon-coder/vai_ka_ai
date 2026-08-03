@@ -1,4 +1,4 @@
-function Header({ mode, modes, onModeChange, showGuideTooltip, onGuideTooltipDismiss }) {
+function Header({ mode, modes, onModeChange }) {
   const modeKeys = Object.keys(modes);
 
   return (
@@ -45,9 +45,9 @@ function Header({ mode, modes, onModeChange, showGuideTooltip, onGuideTooltipDis
         </div>
         <div className="hdr__title">
           <h1>
-            <span className="hdr__title-main">VAI</span>
+            <span className="hdr__title-main">IEEE</span>
             <span className="hdr__title-sep">/</span>
-            <span className="hdr__title-sub">ka.ai</span>
+            <span className="hdr__title-sub">Assistant</span>
           </h1>
           <span className="hdr__subtitle">
             <span className="hdr__pulse"></span>
@@ -57,7 +57,7 @@ function Header({ mode, modes, onModeChange, showGuideTooltip, onGuideTooltipDis
       </div>
 
       <div className="hdr__controls">
-        <div className="modeswitch" role="tablist" aria-label="Select mode">
+        <div className="modepill" role="tablist" aria-label="Select mode">
           {modeKeys.map((k) => {
             const m = modes[k];
             const active = mode === k;
@@ -66,33 +66,15 @@ function Header({ mode, modes, onModeChange, showGuideTooltip, onGuideTooltipDis
                 key={k}
                 role="tab"
                 aria-selected={active}
-                className={`modeswitch__tab ${active ? 'is-active' : ''}`}
+                title={m.label}
+                className={`modepill__btn ${active ? 'is-active' : ''}`}
                 onClick={() => !active && onModeChange(k)}
               >
-                <span className="modeswitch__code">{m.code}</span>
-                <span className="modeswitch__label">{m.label}</span>
+                {m.code}
               </button>
             );
           })}
-          <span
-            className="modeswitch__indicator"
-            style={{ transform: `translateX(${modeKeys.indexOf(mode) * 100}%)` }}
-            aria-hidden="true"
-          ></span>
         </div>
-
-        {showGuideTooltip && (
-          <div className="guide">
-            <div className="guide__arrow" aria-hidden="true"></div>
-            <div className="guide__body">
-              <strong>// SWITCH CHANNELS</strong>
-              <p>Tap a tab to swap context. Deep Dive for research, Student Branch for local info.</p>
-              <button className="guide__btn" onClick={onGuideTooltipDismiss}>
-                ACKNOWLEDGE
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );

@@ -55,14 +55,14 @@ function OnboardingModal({ onDismiss }) {
           <span className="modal__dot"></span>
           <span className="modal__dot"></span>
           <span className="modal__dot"></span>
-          <span className="modal__path">~/vai/session/new</span>
+          <span className="modal__path">~/ieee-assistant/session/new</span>
         </div>
 
         {phase === 'intro' && (
           <div className="modal__inner">
             <div className="modal__tag">[BRIEFING · 001]</div>
             <h2 className="modal__title">
-              Welcome to <span className="modal__title-accent">Vai ka AI</span>
+              Welcome to <span className="modal__title-accent">IEEE Assistant</span>
             </h2>
             <p className="modal__lead">
               Your intelligent companion for all things IEEE. Built for research and branch excellence.

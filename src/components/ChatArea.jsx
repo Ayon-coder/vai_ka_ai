@@ -20,7 +20,7 @@ const ChatArea = forwardRef(function ChatArea(
             <h2 className="welcome__title">
               <span className="welcome__title-line">Hi, I'm</span>
               <span className="welcome__title-name">
-                Vai<span className="welcome__title-dot">.</span>
+                IEEE Assistant<span className="welcome__title-dot">.</span>
                 <span className="welcome__cursor" aria-hidden="true"></span>
               </span>
             </h2>
@@ -69,7 +69,7 @@ const ChatArea = forwardRef(function ChatArea(
                 <span className="msg__rail-tick"></span>
               </div>
               <div className="typing__body">
-                <span className="typing__label">VAI is composing</span>
+                <span className="typing__label">IEEE ASSISTANT is composing</span>
                 <div className="typing__dots">
                   <span></span><span></span><span></span>
                 </div>
