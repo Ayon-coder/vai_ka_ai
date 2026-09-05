@@ -242,6 +242,9 @@ function App() {
 
   const handleModeChange = useCallback((newMode) => {
     setMode(newMode);
+  }, []);
+
+  const handleClearChat = useCallback(() => {
     setMessages([]);
     setChatHistory([]);
     setShowWelcome(true);
@@ -340,7 +343,7 @@ function App() {
           ref={chatWrapperRef}
           messages={messages}
           isTyping={isTyping}
-          showWelcome={showWelcome}
+          showWelcome={showWelcome && messages.length === 0}
           modeContent={currentModeContent}
           onSuggestionClick={handleSendMessage}
           mode={mode}
@@ -372,6 +375,8 @@ function App() {
             'Transmit message to IEEE Assistant...'
           }
           modeCode={currentModeContent.code}
+          onClearChat={handleClearChat}
+          messagesCount={messages.length}
         />
       </div>
 

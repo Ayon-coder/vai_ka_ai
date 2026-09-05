@@ -1,9 +1,43 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
-function InputArea({ onSend, disabled = false, placeholder = 'Message IEEE Assistant...', modeCode }) {
+function InputArea({
+  onSend,
+  disabled = false,
+  placeholder = 'Message IEEE Assistant...',
+  modeCode,
+  onClearChat,
+  messagesCount = 0,
+}) {
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const textareaRef = useRef(null);
+  const menuRef = useRef(null);
+  const optBtnRef = useRef(null);
+
+  // Close menu on click outside or Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleOutsideClick = (e) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target) &&
+        optBtnRef.current &&
+        !optBtnRef.current.contains(e.target)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', handleOutsideClick);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [menuOpen]);
 
   const handleInput = useCallback((e) => {
     setValue(e.target.value);
@@ -66,6 +100,89 @@ function InputArea({ onSend, disabled = false, placeholder = 'Message IEEE Assis
           <span className="composer__count" aria-hidden="true">
             {String(charCount).padStart(4, '0')}
           </span>
+
+          <div className="composer__opt-wrapper">
+            <button
+              ref={optBtnRef}
+              type="button"
+              id="composer-opt-toggle-btn"
+              className={`composer__opt-btn ${menuOpen ? 'is-active' : ''}`}
+              onClick={() => setMenuOpen((prev) => !prev)}
+              title="Chat actions · Clear chat"
+              aria-label="Chat actions"
+              aria-expanded={menuOpen}
+              aria-haspopup="true"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="composer__opt-icon"
+              >
+                <polyline points="18 15 12 9 6 15" />
+              </svg>
+            </button>
+
+            {menuOpen && (
+              <div
+                ref={menuRef}
+                className="composer__menu"
+                role="menu"
+                aria-label="Chat options"
+              >
+                <div className="composer__menu-header">
+                  <span>CHAT OPTIONS</span>
+                  <span className="composer__menu-badge">
+                    {messagesCount} {messagesCount === 1 ? 'MSG' : 'MSGS'}
+                  </span>
+                </div>
+
+                <div className="composer__menu-body">
+                  <button
+                    type="button"
+                    id="composer-clear-chat-btn"
+                    className="composer__menu-item"
+                    onClick={() => {
+                      if (onClearChat) onClearChat();
+                      setMenuOpen(false);
+                    }}
+                    disabled={messagesCount === 0}
+                    role="menuitem"
+                  >
+                    <div className="composer__menu-icon-wrap" aria-hidden="true">
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="15"
+                        height="15"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <line x1="10" y1="11" x2="10" y2="17" />
+                        <line x1="14" y1="11" x2="14" y2="17" />
+                      </svg>
+                    </div>
+                    <div className="composer__menu-text">
+                      <span className="composer__menu-title">Clear Chat</span>
+                      <span className="composer__menu-sub">Wipe previous messages</span>
+                    </div>
+                    <span className="composer__menu-tag">RESET</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             className="composer__send"
             disabled={!isReady}
