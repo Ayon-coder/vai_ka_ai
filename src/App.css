@@ -202,35 +202,306 @@ body {
 /* compact code-pill mode switcher (lives in the status bar) */
 .modepill {
     display: flex;
-    background: rgba(8, 12, 20, 0.55);
+    background: rgba(8, 12, 20, 0.7);
     border: 1px solid var(--line);
     border-radius: var(--r-xs);
     padding: 2px;
     gap: 2px;
 }
 .modepill__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     background: transparent;
     border: none;
     color: var(--txt-3);
-    padding: 0.15rem 0.5rem;
+    padding: 0.2rem 0.6rem;
     cursor: pointer;
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: 0.62rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     border-radius: calc(var(--r-xs) - 1px);
-    transition: color 0.2s ease, background 0.2s ease;
+    transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
     line-height: 1.6;
+}
+.modepill__icon {
+    font-size: 0.72rem;
+    line-height: 1;
+}
+.modepill__label {
+    font-weight: 600;
+}
+.modepill__code {
+    opacity: 0.7;
+    font-size: 0.56rem;
 }
 .modepill__btn.is-active {
     background: var(--cy);
     color: var(--bg-0);
-    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
 }
 .modepill__btn:not(.is-active):hover {
     color: var(--cy);
     background: var(--cy-soft);
+}
+
+.modepill__help {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(0, 229, 255, 0.08);
+    border: 1px solid var(--line-cy);
+    border-radius: var(--r-xs);
+    color: var(--cy);
+    padding: 0.2rem 0.55rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.modepill__help:hover, .modepill__help.is-active {
+    background: var(--cy);
+    color: var(--bg-0);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.45);
+}
+.modepill__help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: currentColor;
+    color: var(--bg-0);
+    font-size: 0.58rem;
+    font-weight: 800;
+}
+.modepill__help:hover .modepill__help-icon,
+.modepill__help.is-active .modepill__help-icon {
+    background: var(--bg-0);
+    color: var(--cy);
+}
+
+/* ─── MODE TUTORIAL BANNER ─────────────────────────────────────────────── */
+.mode-tutorial {
+    max-width: 1180px;
+    margin: 0.75rem auto 0.25rem;
+    width: calc(100% - 48px);
+    position: relative;
+    z-index: 30;
+    animation: tutorialSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes tutorialSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.985);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+.mode-tutorial__inner {
+    position: relative;
+    background: linear-gradient(135deg, rgba(13, 20, 36, 0.96), rgba(8, 12, 22, 0.98));
+    border: 1px solid var(--line-cy);
+    border-radius: var(--r-md);
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 229, 255, 0.18);
+    backdrop-filter: blur(20px);
+}
+.mode-tutorial__glow {
+    position: absolute;
+    inset: -1px;
+    background: radial-gradient(ellipse at top right, rgba(0, 229, 255, 0.25), transparent 65%);
+    border-radius: var(--r-md);
+    pointer-events: none;
+}
+.mode-tutorial__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--line);
+}
+.mode-tutorial__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--cy);
+}
+.mode-tutorial__badge-pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--cy);
+    box-shadow: 0 0 8px var(--cy);
+    animation: pulse 1.6s ease-in-out infinite;
+}
+.mode-tutorial__close-x {
+    background: transparent;
+    border: none;
+    color: var(--txt-3);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    border-radius: var(--r-xs);
+    transition: color 0.2s, background 0.2s;
+}
+.mode-tutorial__close-x:hover {
+    color: var(--txt);
+    background: rgba(255, 255, 255, 0.08);
+}
+.mode-tutorial__title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--txt);
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.01em;
+}
+.mode-tutorial__subtitle {
+    font-size: 0.85rem;
+    color: var(--txt-2);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+.mode-tutorial__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.mode-tutorial__card {
+    background: rgba(16, 24, 42, 0.6);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-sm);
+    padding: 1rem 1.15rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+}
+.mode-tutorial__card:hover {
+    border-color: var(--cy-dim);
+    background: rgba(16, 24, 42, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.mode-tutorial__card--active {
+    border-color: var(--cy);
+    background: linear-gradient(180deg, rgba(0, 229, 255, 0.08), rgba(16, 24, 42, 0.7));
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+}
+.mode-tutorial__card-top {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+}
+.mode-tutorial__card-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.3));
+}
+.mode-tutorial__card-name {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--txt);
+    line-height: 1.2;
+}
+.mode-tutorial__card-code {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    color: var(--cy-dim);
+}
+.mode-tutorial__card-tag {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    background: var(--cy);
+    color: var(--bg-0);
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+}
+.mode-tutorial__card-desc {
+    font-size: 0.78rem;
+    color: var(--txt-2);
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+    flex-grow: 1;
+}
+.mode-tutorial__card-sample {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--txt-3);
+    background: rgba(8, 12, 22, 0.6);
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--r-xs);
+    border-left: 2px solid var(--cy);
+}
+.mode-tutorial__card-sample span {
+    color: var(--cy);
+    font-weight: 600;
+    margin-right: 0.35rem;
+}
+.mode-tutorial__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--line);
+}
+.mode-tutorial__tip {
+    font-size: 0.75rem;
+    color: var(--txt-3);
+    font-family: var(--font-body);
+}
+.mode-tutorial__tip strong {
+    color: var(--txt-2);
+}
+.mode-tutorial__ok-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--cy);
+    color: var(--bg-0);
+    border: none;
+    padding: 0.55rem 1.25rem;
+    border-radius: var(--r-xs);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.45);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+.mode-tutorial__ok-btn:hover {
+    background: #6df4ff;
+    box-shadow: 0 0 26px rgba(0, 229, 255, 0.65);
+    transform: translateY(-1px);
+}
+.mode-tutorial__ok-btn:active {
+    transform: translateY(0);
 }
 
 /* ─── STATUS BAR ─────────────────────────────────────────────────────────── */

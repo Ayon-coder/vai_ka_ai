@@ -4,7 +4,10 @@ import Header from './components/Header';
 import ChatArea from './components/ChatArea';
 import InputArea from './components/InputArea';
 import OnboardingModal from './components/OnboardingModal';
+import ModeTutorialBanner from './components/ModeTutorialBanner';
 import './App.css';
+
+const TUTORIAL_KEY = 'ieee_mode_tutorial_acknowledged';
 
 const MODE_CONTENT = {
   deep_dive: {
@@ -73,11 +76,19 @@ function App() {
   const [isTyping, setIsTyping] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showModeTutorial, setShowModeTutorial] = useState(() => {
+    return !localStorage.getItem(TUTORIAL_KEY);
+  });
   const [isReady, setIsReady] = useState(false);
   const [banned, setBanned] = useState(isBanned());
   const [banMins, setBanMins] = useState(banRemainingMinutes());
   const chatWrapperRef = useRef(null);
   const bgRef = useRef(null);
+
+  const handleDismissTutorial = useCallback(() => {
+    setShowModeTutorial(false);
+    localStorage.setItem(TUTORIAL_KEY, 'true');
+  }, []);
 
   useEffect(() => {
     if (!banned) return;
@@ -282,17 +293,32 @@ function App() {
                 return (
                   <button
                     key={k}
+                    id={`mode-btn-${k}`}
                     role="tab"
                     aria-selected={active}
-                    title={m.label}
+                    title={`${m.label}: ${m.description}`}
                     className={`modepill__btn ${active ? 'is-active' : ''}`}
                     onClick={() => !active && handleModeChange(k)}
                   >
-                    {m.code}
+                    <span className="modepill__icon" aria-hidden="true">{k === 'deep_dive' ? '🔬' : '🏛️'}</span>
+                    <span className="modepill__label">{m.label}</span>
+                    <span className="modepill__code">({m.code})</span>
                   </button>
                 );
               })}
             </div>
+
+            <button
+              type="button"
+              id="mode-guide-toggle-btn"
+              className={`modepill__help ${showModeTutorial ? 'is-active' : ''}`}
+              title="Channel Guide · Why are there two buttons?"
+              onClick={() => setShowModeTutorial((prev) => !prev)}
+              aria-expanded={showModeTutorial}
+            >
+              <span className="modepill__help-icon" aria-hidden="true">?</span>
+              <span className="modepill__help-text">Guide</span>
+            </button>
           </div>
           <div className="statusbar__group">
             <span className="statusbar__label">STATE</span>
@@ -301,6 +327,14 @@ function App() {
             </span>
           </div>
         </div>
+
+        {showModeTutorial && (
+          <ModeTutorialBanner
+            activeMode={mode}
+            onModeSelect={handleModeChange}
+            onDismiss={handleDismissTutorial}
+          />
+        )}
 
         <ChatArea
           ref={chatWrapperRef}

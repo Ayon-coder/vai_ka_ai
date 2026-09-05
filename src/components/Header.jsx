@@ -64,13 +64,16 @@ function Header({ mode, modes, onModeChange }) {
             return (
               <button
                 key={k}
+                id={`hdr-mode-btn-${k}`}
                 role="tab"
                 aria-selected={active}
-                title={m.label}
+                title={`${m.label}: ${m.description}`}
                 className={`modepill__btn ${active ? 'is-active' : ''}`}
                 onClick={() => !active && onModeChange(k)}
               >
-                {m.code}
+                <span className="modepill__icon" aria-hidden="true">{k === 'deep_dive' ? '🔬' : '🏛️'}</span>
+                <span className="modepill__label">{m.label}</span>
+                <span className="modepill__code">({m.code})</span>
               </button>
             );
           })}
