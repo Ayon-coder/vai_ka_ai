@@ -137,7 +137,7 @@ function InputArea({
                 aria-label="Chat options"
               >
                 <div className="composer__menu-header">
-                  <span>CHAT OPTIONS</span>
+                  <span>CHAT OPTIONS · {modeCode || 'CURRENT'}</span>
                   <span className="composer__menu-badge">
                     {messagesCount} {messagesCount === 1 ? 'MSG' : 'MSGS'}
                   </span>
@@ -173,8 +173,10 @@ function InputArea({
                       </svg>
                     </div>
                     <div className="composer__menu-text">
-                      <span className="composer__menu-title">Clear Chat</span>
-                      <span className="composer__menu-sub">Wipe previous messages</span>
+                      <span className="composer__menu-title">Clear {modeCode || 'Current'} Chat</span>
+                      <span className="composer__menu-sub">
+                        Wipe {modeCode === 'DD-01' ? 'Deep Dive' : 'Student Branch'} messages
+                      </span>
                     </div>
                     <span className="composer__menu-tag">RESET</span>
                   </button>

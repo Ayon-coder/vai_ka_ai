@@ -7,8 +7,6 @@ import OnboardingModal from './components/OnboardingModal';
 import ModeTutorialBanner from './components/ModeTutorialBanner';
 import './App.css';
 
-const TUTORIAL_KEY = 'ieee_mode_tutorial_acknowledged';
-
 const MODE_CONTENT = {
   deep_dive: {
     label: 'Deep Dive',
@@ -70,24 +68,33 @@ function banRemainingMinutes() {
 }
 
 function App() {
-  const [messages, setMessages] = useState([]);
-  const [chatHistory, setChatHistory] = useState([]);
+  const [messagesByMode, setMessagesByMode] = useState({
+    deep_dive: [],
+    student_branch: [],
+  });
+  const [chatHistoryByMode, setChatHistoryByMode] = useState({
+    deep_dive: [],
+    student_branch: [],
+  });
+  const [typingByMode, setTypingByMode] = useState({
+    deep_dive: false,
+    student_branch: false,
+  });
   const [mode, setMode] = useState('deep_dive');
-  const [isTyping, setIsTyping] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(true);
-  const [showModeTutorial, setShowModeTutorial] = useState(() => {
-    return !localStorage.getItem(TUTORIAL_KEY);
-  });
+  const [showModeTutorial, setShowModeTutorial] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [banned, setBanned] = useState(isBanned());
   const [banMins, setBanMins] = useState(banRemainingMinutes());
   const chatWrapperRef = useRef(null);
   const bgRef = useRef(null);
 
+  const currentMessages = messagesByMode[mode] || [];
+  const isTyping = !!typingByMode[mode];
+
   const handleDismissTutorial = useCallback(() => {
     setShowModeTutorial(false);
-    localStorage.setItem(TUTORIAL_KEY, 'true');
   }, []);
 
   useEffect(() => {
@@ -141,38 +148,48 @@ function App() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping, scrollToBottom]);
+  }, [mode, currentMessages, isTyping, scrollToBottom]);
 
   const handleSendMessage = useCallback(async (text) => {
     if (!text.trim()) return;
 
+    const targetMode = mode;
+
     if (isBanned()) {
       setBanned(true);
       const mins = banRemainingMinutes();
-      setMessages((prev) => [
+      const banMsg = {
+        role: 'assistant',
+        content: `🚫 You're temporarily on cooldown for ${mins} more minute${mins !== 1 ? 's' : ''}. Please come back later!`,
+        sources: [],
+        timestamp: new Date(),
+      };
+      setMessagesByMode((prev) => ({
         ...prev,
-        {
-          role: 'assistant',
-          content: `🚫 You're temporarily on cooldown for ${mins} more minute${mins !== 1 ? 's' : ''}. Please come back later!`,
-          sources: [],
-          timestamp: new Date(),
-        },
-      ]);
+        [targetMode]: [...(prev[targetMode] || []), banMsg],
+      }));
       return;
     }
 
     setShowWelcome(false);
 
     const userMsg = { role: 'user', content: text, timestamp: new Date() };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessagesByMode((prev) => ({
+      ...prev,
+      [targetMode]: [...(prev[targetMode] || []), userMsg],
+    }));
 
-    const newHistory = [...chatHistory, { role: 'user', content: text }];
-    setChatHistory(newHistory);
+    const existingHistory = chatHistoryByMode[targetMode] || [];
+    const newHistory = [...existingHistory, { role: 'user', content: text }];
+    setChatHistoryByMode((prev) => ({
+      ...prev,
+      [targetMode]: newHistory,
+    }));
 
-    setIsTyping(true);
+    setTypingByMode((prev) => ({ ...prev, [targetMode]: true }));
 
     try {
-      const data = await sendChat(newHistory, mode);
+      const data = await sendChat(newHistory, targetMode);
 
       if (data.is_warning) {
         const currentStrikes = getStrikes() + 1;
@@ -187,15 +204,16 @@ function App() {
           warningContent = `⚠️ Warning ${currentStrikes}/${MAX_STRIKES}: Please send meaningful messages. ${MAX_STRIKES - currentStrikes} more warning${MAX_STRIKES - currentStrikes !== 1 ? 's' : ''} before a temporary cooldown.`;
         }
 
-        setMessages((prev) => [
+        const warnMsg = {
+          role: 'assistant',
+          content: warningContent,
+          sources: [],
+          timestamp: new Date(),
+        };
+        setMessagesByMode((prev) => ({
           ...prev,
-          {
-            role: 'assistant',
-            content: warningContent,
-            sources: [],
-            timestamp: new Date(),
-          },
-        ]);
+          [targetMode]: [...(prev[targetMode] || []), warnMsg],
+        }));
         return;
       }
 
@@ -208,47 +226,62 @@ function App() {
           sources,
           timestamp: new Date(),
         };
-        setMessages((prev) => [...prev, assistantMsg]);
-        setChatHistory((prev) => [
+        setMessagesByMode((prev) => ({
           ...prev,
-          { role: 'assistant', content: assistantContent },
-        ]);
+          [targetMode]: [...(prev[targetMode] || []), assistantMsg],
+        }));
+        setChatHistoryByMode((prev) => ({
+          ...prev,
+          [targetMode]: [
+            ...(prev[targetMode] || []),
+            { role: 'assistant', content: assistantContent },
+          ],
+        }));
       } else {
-        setMessages((prev) => [
+        const errFallback = {
+          role: 'assistant',
+          content: 'Sorry, I encountered an error. Please try again.',
+          sources: [],
+          timestamp: new Date(),
+        };
+        setMessagesByMode((prev) => ({
           ...prev,
-          {
-            role: 'assistant',
-            content: 'Sorry, I encountered an error. Please try again.',
-            sources: [],
-            timestamp: new Date(),
-          },
-        ]);
+          [targetMode]: [...(prev[targetMode] || []), errFallback],
+        }));
       }
     } catch (error) {
       console.error('Error:', error);
-      setMessages((prev) => [
+      const connErr = {
+        role: 'assistant',
+        content: 'Technical error: Could not connect to the server.',
+        sources: [],
+        timestamp: new Date(),
+      };
+      setMessagesByMode((prev) => ({
         ...prev,
-        {
-          role: 'assistant',
-          content: 'Technical error: Could not connect to the server.',
-          sources: [],
-          timestamp: new Date(),
-        },
-      ]);
+        [targetMode]: [...(prev[targetMode] || []), connErr],
+      }));
     } finally {
-      setIsTyping(false);
+      setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
     }
-  }, [chatHistory, mode]);
+  }, [chatHistoryByMode, mode]);
 
   const handleModeChange = useCallback((newMode) => {
     setMode(newMode);
   }, []);
 
-  const handleClearChat = useCallback(() => {
-    setMessages([]);
-    setChatHistory([]);
+  const handleClearChat = useCallback((modeToClear) => {
+    const target = modeToClear || mode;
+    setMessagesByMode((prev) => ({
+      ...prev,
+      [target]: [],
+    }));
+    setChatHistoryByMode((prev) => ({
+      ...prev,
+      [target]: [],
+    }));
     setShowWelcome(true);
-  }, []);
+  }, [mode]);
 
   const handleOnboardingDismiss = useCallback(() => {
     setShowOnboarding(false);
@@ -341,9 +374,9 @@ function App() {
 
         <ChatArea
           ref={chatWrapperRef}
-          messages={messages}
+          messages={currentMessages}
           isTyping={isTyping}
-          showWelcome={showWelcome && messages.length === 0}
+          showWelcome={showWelcome && currentMessages.length === 0}
           modeContent={currentModeContent}
           onSuggestionClick={handleSendMessage}
           mode={mode}
@@ -376,7 +409,7 @@ function App() {
           }
           modeCode={currentModeContent.code}
           onClearChat={handleClearChat}
-          messagesCount={messages.length}
+          messagesCount={currentMessages.length}
         />
       </div>
 
