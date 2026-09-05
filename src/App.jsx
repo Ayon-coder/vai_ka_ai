@@ -185,37 +185,48 @@ function App() {
       [targetMode]: newHistory,
     }));
 
+    // Show the loading animation (5 steps in Deep Dive, 3 dots in Student Branch)
     setTypingByMode((prev) => ({ ...prev, [targetMode]: true }));
-
-    // Create a placeholder streaming assistant message
-    const streamingMsg = {
-      role: 'assistant',
-      content: '',
-      sources: [],
-      timestamp: new Date(),
-      isStreaming: true,
-    };
-    setMessagesByMode((prev) => ({
-      ...prev,
-      [targetMode]: [...(prev[targetMode] || []), streamingMsg],
-    }));
 
     let accumulatedContent = '';
     let streamMeta = null;
+    let hasStartedStreaming = false;
     const doneCalledRef = { current: false };
 
     const abort = streamChat(newHistory, targetMode, {
       onChunk: (chunk) => {
         accumulatedContent += chunk;
         const currentContent = accumulatedContent;
-        setMessagesByMode((prev) => {
-          const msgs = [...(prev[targetMode] || [])];
-          const lastIdx = msgs.length - 1;
-          if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
-            msgs[lastIdx] = { ...msgs[lastIdx], content: currentContent };
-          }
-          return { ...prev, [targetMode]: msgs };
-        });
+
+        if (!hasStartedStreaming) {
+          hasStartedStreaming = true;
+          // Hide loading animation once tokens start streaming
+          setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
+          // Add the assistant message bubble for streaming
+          setMessagesByMode((prev) => ({
+            ...prev,
+            [targetMode]: [
+              ...(prev[targetMode] || []),
+              {
+                role: 'assistant',
+                content: currentContent,
+                sources: [],
+                timestamp: new Date(),
+                isStreaming: true,
+              },
+            ],
+          }));
+        } else {
+          // Progressively update the streaming message
+          setMessagesByMode((prev) => {
+            const msgs = [...(prev[targetMode] || [])];
+            const lastIdx = msgs.length - 1;
+            if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
+              msgs[lastIdx] = { ...msgs[lastIdx], content: currentContent };
+            }
+            return { ...prev, [targetMode]: msgs };
+          });
+        }
       },
 
       onMeta: (meta) => {
@@ -225,6 +236,8 @@ function App() {
       onDone: () => {
         if (doneCalledRef.current) return;
         doneCalledRef.current = true;
+
+        setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
 
         const finalContent = accumulatedContent;
         const sources = streamMeta?.sources || [];
@@ -245,39 +258,70 @@ function App() {
             warningContent = `⚠️ Warning ${currentStrikes}/${MAX_STRIKES}: Please send meaningful messages. ${MAX_STRIKES - currentStrikes} more warning${MAX_STRIKES - currentStrikes !== 1 ? 's' : ''} before a temporary cooldown.`;
           }
 
+          if (hasStartedStreaming) {
+            setMessagesByMode((prev) => {
+              const msgs = [...(prev[targetMode] || [])];
+              const lastIdx = msgs.length - 1;
+              if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
+                msgs[lastIdx] = {
+                  role: 'assistant',
+                  content: warningContent,
+                  sources: [],
+                  timestamp: new Date(),
+                  isStreaming: false,
+                };
+              }
+              return { ...prev, [targetMode]: msgs };
+            });
+          } else {
+            setMessagesByMode((prev) => ({
+              ...prev,
+              [targetMode]: [
+                ...(prev[targetMode] || []),
+                {
+                  role: 'assistant',
+                  content: warningContent,
+                  sources: [],
+                  timestamp: new Date(),
+                  isStreaming: false,
+                },
+              ],
+            }));
+          }
+          return;
+        }
+
+        // Finalize the message
+        if (hasStartedStreaming) {
           setMessagesByMode((prev) => {
             const msgs = [...(prev[targetMode] || [])];
             const lastIdx = msgs.length - 1;
             if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
               msgs[lastIdx] = {
                 role: 'assistant',
-                content: warningContent,
-                sources: [],
+                content: finalContent || 'Sorry, I encountered an error. Please try again.',
+                sources,
                 timestamp: new Date(),
                 isStreaming: false,
               };
             }
             return { ...prev, [targetMode]: msgs };
           });
-          setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
-          return;
+        } else {
+          setMessagesByMode((prev) => ({
+            ...prev,
+            [targetMode]: [
+              ...(prev[targetMode] || []),
+              {
+                role: 'assistant',
+                content: finalContent || 'Sorry, I encountered an error. Please try again.',
+                sources,
+                timestamp: new Date(),
+                isStreaming: false,
+              },
+            ],
+          }));
         }
-
-        // Finalize the streaming message
-        setMessagesByMode((prev) => {
-          const msgs = [...(prev[targetMode] || [])];
-          const lastIdx = msgs.length - 1;
-          if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
-            msgs[lastIdx] = {
-              role: 'assistant',
-              content: finalContent || 'Sorry, I encountered an error. Please try again.',
-              sources,
-              timestamp: new Date(),
-              isStreaming: false,
-            };
-          }
-          return { ...prev, [targetMode]: msgs };
-        });
 
         // Add to chat history
         if (finalContent && !isRejected) {
@@ -289,27 +333,35 @@ function App() {
             ],
           }));
         }
-
-        setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
       },
 
       onError: (err) => {
         console.error('Stream error:', err);
-        setMessagesByMode((prev) => {
-          const msgs = [...(prev[targetMode] || [])];
-          const lastIdx = msgs.length - 1;
-          if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
-            msgs[lastIdx] = {
-              role: 'assistant',
-              content: 'Technical error: Could not connect to the server.',
-              sources: [],
-              timestamp: new Date(),
-              isStreaming: false,
-            };
-          }
-          return { ...prev, [targetMode]: msgs };
-        });
         setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
+
+        const errFallback = {
+          role: 'assistant',
+          content: 'Technical error: Could not connect to the server.',
+          sources: [],
+          timestamp: new Date(),
+          isStreaming: false,
+        };
+
+        if (hasStartedStreaming) {
+          setMessagesByMode((prev) => {
+            const msgs = [...(prev[targetMode] || [])];
+            const lastIdx = msgs.length - 1;
+            if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
+              msgs[lastIdx] = errFallback;
+            }
+            return { ...prev, [targetMode]: msgs };
+          });
+        } else {
+          setMessagesByMode((prev) => ({
+            ...prev,
+            [targetMode]: [...(prev[targetMode] || []), errFallback],
+          }));
+        }
       },
     });
 

@@ -14,7 +14,7 @@ function LoadingIndicator() {
   useEffect(() => {
     const interval = setInterval(() => {
       setMessageIndex((prev) => (prev < STATUS_MESSAGES.length - 1 ? prev + 1 : prev));
-    }, 2500);
+    }, 1200);
     return () => clearInterval(interval);
   }, []);
 

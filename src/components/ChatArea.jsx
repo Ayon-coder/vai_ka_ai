@@ -59,7 +59,7 @@ const ChatArea = forwardRef(function ChatArea(
           ))}
         </div>
 
-        {isTyping && !messages.some((m) => m.isStreaming) && (
+        {isTyping && (
           mode === 'deep_dive' ? (
             <LoadingIndicator />
           ) : (
