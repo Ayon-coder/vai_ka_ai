@@ -7,7 +7,7 @@ marked.setOptions({
   gfm: true,
 });
 
-function MessageBubble({ role, content, sources = [], timestamp }) {
+function MessageBubble({ role, content, sources = [], timestamp, isStreaming = false }) {
   const timeStr = useMemo(() => {
     const d = timestamp ? new Date(timestamp) : new Date();
     return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
@@ -46,7 +46,10 @@ function MessageBubble({ role, content, sources = [], timestamp }) {
 
           <div className="msg__content">
             {role === 'assistant' ? (
-              <div dangerouslySetInnerHTML={renderedContent} />
+              <div className="msg__markdown">
+                <div dangerouslySetInnerHTML={renderedContent} />
+                {isStreaming && <span className="msg__cursor" aria-hidden="true"></span>}
+              </div>
             ) : (
               <span>{content}</span>
             )}

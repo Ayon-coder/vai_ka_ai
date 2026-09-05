@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { sendChat } from './api';
+import { streamChat } from './api';
 import Header from './components/Header';
 import ChatArea from './components/ChatArea';
 import InputArea from './components/InputArea';
@@ -149,6 +149,8 @@ function App() {
     scrollToBottom();
   }, [mode, currentMessages, isTyping, scrollToBottom]);
 
+  const abortRef = useRef(null);
+
   const handleSendMessage = useCallback(async (text) => {
     if (!text.trim()) return;
 
@@ -185,82 +187,133 @@ function App() {
 
     setTypingByMode((prev) => ({ ...prev, [targetMode]: true }));
 
-    try {
-      const data = await sendChat(newHistory, targetMode);
+    // Create a placeholder streaming assistant message
+    const streamingMsg = {
+      role: 'assistant',
+      content: '',
+      sources: [],
+      timestamp: new Date(),
+      isStreaming: true,
+    };
+    setMessagesByMode((prev) => ({
+      ...prev,
+      [targetMode]: [...(prev[targetMode] || []), streamingMsg],
+    }));
 
-      if (data.is_warning) {
-        const currentStrikes = getStrikes() + 1;
-        setStrikes(currentStrikes);
+    let accumulatedContent = '';
+    let streamMeta = null;
+    const doneCalledRef = { current: false };
 
-        let warningContent;
-        if (currentStrikes >= MAX_STRIKES) {
-          setBan();
-          setBanned(true);
-          warningContent = `🚫 Too many nonsense messages. You've been put on a 30-minute cooldown. Please use this time wisely!`;
-        } else {
-          warningContent = `⚠️ Warning ${currentStrikes}/${MAX_STRIKES}: Please send meaningful messages. ${MAX_STRIKES - currentStrikes} more warning${MAX_STRIKES - currentStrikes !== 1 ? 's' : ''} before a temporary cooldown.`;
+    const abort = streamChat(newHistory, targetMode, {
+      onChunk: (chunk) => {
+        accumulatedContent += chunk;
+        const currentContent = accumulatedContent;
+        setMessagesByMode((prev) => {
+          const msgs = [...(prev[targetMode] || [])];
+          const lastIdx = msgs.length - 1;
+          if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
+            msgs[lastIdx] = { ...msgs[lastIdx], content: currentContent };
+          }
+          return { ...prev, [targetMode]: msgs };
+        });
+      },
+
+      onMeta: (meta) => {
+        streamMeta = meta;
+      },
+
+      onDone: () => {
+        if (doneCalledRef.current) return;
+        doneCalledRef.current = true;
+
+        const finalContent = accumulatedContent;
+        const sources = streamMeta?.sources || [];
+        const isWarning = streamMeta?.is_warning || false;
+        const isRejected = streamMeta?.is_rejected || false;
+
+        // Handle warning (strike escalation)
+        if (isWarning) {
+          const currentStrikes = getStrikes() + 1;
+          setStrikes(currentStrikes);
+
+          let warningContent;
+          if (currentStrikes >= MAX_STRIKES) {
+            setBan();
+            setBanned(true);
+            warningContent = `🚫 Too many nonsense messages. You've been put on a 30-minute cooldown. Please use this time wisely!`;
+          } else {
+            warningContent = `⚠️ Warning ${currentStrikes}/${MAX_STRIKES}: Please send meaningful messages. ${MAX_STRIKES - currentStrikes} more warning${MAX_STRIKES - currentStrikes !== 1 ? 's' : ''} before a temporary cooldown.`;
+          }
+
+          setMessagesByMode((prev) => {
+            const msgs = [...(prev[targetMode] || [])];
+            const lastIdx = msgs.length - 1;
+            if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
+              msgs[lastIdx] = {
+                role: 'assistant',
+                content: warningContent,
+                sources: [],
+                timestamp: new Date(),
+                isStreaming: false,
+              };
+            }
+            return { ...prev, [targetMode]: msgs };
+          });
+          setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
+          return;
         }
 
-        const warnMsg = {
-          role: 'assistant',
-          content: warningContent,
-          sources: [],
-          timestamp: new Date(),
-        };
-        setMessagesByMode((prev) => ({
-          ...prev,
-          [targetMode]: [...(prev[targetMode] || []), warnMsg],
-        }));
-        return;
-      }
+        // Finalize the streaming message
+        setMessagesByMode((prev) => {
+          const msgs = [...(prev[targetMode] || [])];
+          const lastIdx = msgs.length - 1;
+          if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
+            msgs[lastIdx] = {
+              role: 'assistant',
+              content: finalContent || 'Sorry, I encountered an error. Please try again.',
+              sources,
+              timestamp: new Date(),
+              isStreaming: false,
+            };
+          }
+          return { ...prev, [targetMode]: msgs };
+        });
 
-      if (data.choices && data.choices[0]) {
-        const assistantContent = data.choices[0].message.content;
-        const sources = data.sources || [];
-        const assistantMsg = {
-          role: 'assistant',
-          content: assistantContent,
-          sources,
-          timestamp: new Date(),
-        };
-        setMessagesByMode((prev) => ({
-          ...prev,
-          [targetMode]: [...(prev[targetMode] || []), assistantMsg],
-        }));
-        setChatHistoryByMode((prev) => ({
-          ...prev,
-          [targetMode]: [
-            ...(prev[targetMode] || []),
-            { role: 'assistant', content: assistantContent },
-          ],
-        }));
-      } else {
-        const errFallback = {
-          role: 'assistant',
-          content: 'Sorry, I encountered an error. Please try again.',
-          sources: [],
-          timestamp: new Date(),
-        };
-        setMessagesByMode((prev) => ({
-          ...prev,
-          [targetMode]: [...(prev[targetMode] || []), errFallback],
-        }));
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      const connErr = {
-        role: 'assistant',
-        content: 'Technical error: Could not connect to the server.',
-        sources: [],
-        timestamp: new Date(),
-      };
-      setMessagesByMode((prev) => ({
-        ...prev,
-        [targetMode]: [...(prev[targetMode] || []), connErr],
-      }));
-    } finally {
-      setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
-    }
+        // Add to chat history
+        if (finalContent && !isRejected) {
+          setChatHistoryByMode((prev) => ({
+            ...prev,
+            [targetMode]: [
+              ...(prev[targetMode] || []),
+              { role: 'assistant', content: finalContent },
+            ],
+          }));
+        }
+
+        setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
+      },
+
+      onError: (err) => {
+        console.error('Stream error:', err);
+        setMessagesByMode((prev) => {
+          const msgs = [...(prev[targetMode] || [])];
+          const lastIdx = msgs.length - 1;
+          if (lastIdx >= 0 && msgs[lastIdx].isStreaming) {
+            msgs[lastIdx] = {
+              role: 'assistant',
+              content: 'Technical error: Could not connect to the server.',
+              sources: [],
+              timestamp: new Date(),
+              isStreaming: false,
+            };
+          }
+          return { ...prev, [targetMode]: msgs };
+        });
+        setTypingByMode((prev) => ({ ...prev, [targetMode]: false }));
+      },
+    });
+
+    abortRef.current = abort;
   }, [chatHistoryByMode, mode]);
 
   const handleModeChange = useCallback((newMode) => {
