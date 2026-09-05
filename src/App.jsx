@@ -81,7 +81,6 @@ function App() {
     student_branch: false,
   });
   const [mode, setMode] = useState('deep_dive');
-  const [showWelcome, setShowWelcome] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [showModeTutorial, setShowModeTutorial] = useState(true);
   const [isReady, setIsReady] = useState(false);
@@ -170,8 +169,6 @@ function App() {
       }));
       return;
     }
-
-    setShowWelcome(false);
 
     const userMsg = { role: 'user', content: text, timestamp: new Date() };
     setMessagesByMode((prev) => ({
@@ -280,7 +277,6 @@ function App() {
       ...prev,
       [target]: [],
     }));
-    setShowWelcome(true);
   }, [mode]);
 
   const handleOnboardingDismiss = useCallback(() => {
@@ -376,7 +372,7 @@ function App() {
           ref={chatWrapperRef}
           messages={currentMessages}
           isTyping={isTyping}
-          showWelcome={showWelcome && currentMessages.length === 0}
+          showWelcome={currentMessages.length === 0}
           modeContent={currentModeContent}
           onSuggestionClick={handleSendMessage}
           mode={mode}
